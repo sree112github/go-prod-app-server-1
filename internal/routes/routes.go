@@ -12,6 +12,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	api := r.Group("/api")
+
 	{
 		api.POST("/signup", controllers.SignUp)
 		api.POST("login", controllers.Login)
@@ -24,9 +25,15 @@ func SetupRouter() *gin.Engine {
 
 	{
 
-		protectedRoutes.GET("/profile", middleware.AuthMiddleware(), controllers.UserProfile)
-		protectedRoutes.POST("/createcompany", middleware.AuthMiddleware(), controllers.CreateCompany)
-		protectedRoutes.POST("/createplant", middleware.AuthMiddleware(), controllers.CreatePlant)
+		protectedRoutes.GET("/profile", controllers.UserProfile)
+		protectedRoutes.POST("/createcompany", controllers.CreateCompany)
+		protectedRoutes.POST("/createplant", controllers.CreatePlant)
+		protectedRoutes.POST("/createmachine", controllers.CreateMachine)
+		protectedRoutes.POST("/createdevice", controllers.CreateDevice)
+		protectedRoutes.POST("/createdevicedata", controllers.CreateDeviceData)
+		protectedRoutes.POST("/assignuserrole", controllers.AssignUserRole)
+		protectedRoutes.GET("/getallusers", controllers.GetAllUserInfoBasedOnScope)
+
 	}
 
 	return r

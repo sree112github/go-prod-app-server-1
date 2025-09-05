@@ -3,6 +3,7 @@ package utils
 import (
 	"basics/internal/models"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -10,18 +11,25 @@ import (
 
 var jwtSecret = []byte(Cfg.JWTSecret)
 
-func GenerateJWT(user *models.UserModel) (string, error) {
-
+func GenerateJWT(user *models.LoginResponse) (*models.LoginResponse, error) {
 	claims := jwt.MapClaims{
-		"email":   user.Email,
-		"scope":   user.UserScope,
-		"user_id": user.UserId.String(),
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"email":      user.Email,
+		"company_id": user.CompanyId,
+		"plant_id":   user.PlantId,
+		"machine_id": user.PlantId,
+		"scope":      user.Scope,
+		"user_id":    user.UserId,
+		"exp":        time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("token creation failed: %w", err)
+	}
 
-	return token.SignedString(jwtSecret)
+	user.Token = tokenStr
+	return user, nil
 
 }
 

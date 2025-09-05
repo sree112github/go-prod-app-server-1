@@ -5,7 +5,7 @@ import (
 	"basics/internal/repository"
 )
 
-func CreateCompany(company *models.CompanyModel) (*models.CompanyModel, error) {
+func CreateCompany(company *models.CompanyInputModel) (*models.CompanyResponseModel, error) {
 
 	return repository.CreateCompany(company)
 }

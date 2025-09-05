@@ -3,6 +3,7 @@ package controllers
 import (
 	"basics/internal/models"
 	"basics/internal/services"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,13 +36,8 @@ func CreateCompany(c *gin.Context) {
 		return
 	}
 
-	// Step 3: Build model
-	company := &models.CompanyModel{
-		CompanyName: input.CompanyName,
-	}
-
 	// Step 4: Call service
-	createdCompany, err := services.CreateCompany(company)
+	createdCompany, err := services.CreateCompany(&input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -56,5 +52,5 @@ func CreateCompany(c *gin.Context) {
 
 	// Step 6: Return response
 	c.JSON(http.StatusCreated, response)
-	
+
 }

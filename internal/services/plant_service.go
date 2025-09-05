@@ -6,13 +6,13 @@ import (
 	"fmt"
 )
 
-func CreatePlant(plant *models.PlantModel) (*models.PlantModel, error) {
+func CreatePlant(plant *models.PlantInputModel) (*models.PlantResponseModel, error) {
 
-	plant, err := repository.CreatePlant(plant)
+	response, err := repository.CreatePlant(plant)
 	if err != nil {
 		fmt.Println("error occured in the Service Layer During Plant Creation")
 		return nil, err
 	}
 
-	return plant, nil
+	return response, nil
 }

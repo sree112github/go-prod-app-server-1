@@ -7,8 +7,9 @@ import (
 	"fmt"
 )
 
-func SignUp(user_name string, scope string, email string, password string) (*models.UserModel, error) {
-	hashedPassword, err := utils.GenerateHashedPassword(password)
+func SignUp(user *models.SignUpInput) (*models.SignUpResponse, error) {
+
+	hashedPassword, err := utils.GenerateHashedPassword(user.Password)
 	if err != nil {
 		fmt.Println("Password hashing failed:", err)
 		return nil, err
@@ -16,37 +17,41 @@ func SignUp(user_name string, scope string, email string, password string) (*mod
 
 	fmt.Println("Password hashed successfully")
 
-	user := models.UserModel{
-		Email:     email,
-		Password:  string(hashedPassword),
-		UserScope: scope,
-		UserName:  user_name,
+	signUpInput := models.SignUpInput{
+		UserName: user.UserName,
+		Email:    user.Email,
+		Password: hashedPassword, // ✅ use the hashed password
 	}
 
-	return repository.CreateUser(&user)
+	return repository.CreateUser(&signUpInput)
 }
 
-func Login(email string, password string) (*models.UserModel, string, error) {
-
-	user, err := repository.GetUserByEmail(email)
-
+func Login(user *models.LoginInput) (*models.LoginResponse, error) {
+	response, err := repository.GetUserByEmail(user)
 	if err != nil {
-		fmt.Println("!")
-		return nil, "", fmt.Errorf("Invalid Email or password")
+		return nil, fmt.Errorf("invalid email or password")
 	}
 
-	if !utils.CheckPasswordIsCorrect(password, user.Password) {
-		return nil, "", fmt.Errorf("Invalid Email or Password")
+	if !utils.CheckPasswordIsCorrect(user.Password, response.Password) {
+		return nil, fmt.Errorf("invalid email or password")
 	}
 
-	//Generate JWT
-
-	token, err := utils.GenerateJWT(user)
-
+	// Generate JWT
+	response, err = utils.GenerateJWT(response)
 	if err != nil {
-		return nil, "", fmt.Errorf("Could Not generate Token")
+		return nil, fmt.Errorf("could not generate token: %w", err)
 	}
 
-	return user, token, nil
+	return response, nil
+}
+
+func AssignUserRole(input *models.AssignRoleInput) (*models.AssignRoleResponse, error) {
+
+	user, err := repository.AssignUserRole(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 
 }

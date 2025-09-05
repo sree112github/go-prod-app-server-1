@@ -9,32 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SignUpInput struct {
-	UserName string `json:"name" binding:"required"`
-	Scope    string `json:"scope" binding:"required,oneof=super_admin company_admin plant_admin machine_admin"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-}
-
-type SignUpResponse struct {
-	Message  string `json:"message"`
-	UserId   string `json:"user_id"`
-	UserName string `json:"name"`
-	Email    string `json:"email"`
-	Scope    string `json:"scope"`
-}
-
-type LoginResponse struct {
-	UserId   string `json:"user_id"`
-	UserName string `json:"name"`
-	Email    string `json:"email"`
-	Token    string `json:"token"`
-	Scope    string `json:"scope"`
-}
-
 func SignUp(c *gin.Context) {
 
-	var input SignUpInput
+	var input models.SignUpInput
 
 	//Step1; bind with the json from request
 
@@ -43,19 +20,19 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	users, err := services.SignUp(input.UserName, input.Scope, input.Email, input.Password)
+	users, err := services.SignUp(&input)
 	if err != nil {
 		fmt.Println("❌ Signup service error:", err) // backend log
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	response := SignUpResponse{
+	response := models.SignUpResponse{
 		Message:  "User Created Successfully",
-		UserId:   users.UserId.String(), // convert UUID to string
-		UserName: users.UserName,        // matches UserModel field
+		UserId:   users.UserId,   // convert UUID to string
+		UserName: users.UserName, // matches UserModel field
 		Email:    users.Email,
-		Scope:    users.UserScope,
+		Scope:    users.Scope,
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -71,21 +48,107 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, token, err := services.Login(input.Email, input.Password)
+	user, err := services.Login(&input)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	response := LoginResponse{
-		UserId:   user.UserId.String(),
-		UserName: user.UserName,
-		Email:    user.Email,
-		Token:    token,
-		Scope:    user.UserScope,
+	response := models.LoginResponse{
+		UserId:    user.UserId,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		Token:     user.Token,
+		Scope:     user.Scope,
+		CompanyId: user.CompanyId,
+		PlantId:   user.PlantId,
+		MachineId: user.MachineId,
 	}
 
 	c.JSON(http.StatusCreated, response)
 
+}
+
+func AssignUserRole(c *gin.Context) {
+	var input models.AssignRoleInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 🔑 Extract current user metadata from JWT/context
+	scope, ok := c.Get("scope")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Scope not available"})
+		return
+	}
+	scopeStr, ok := scope.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid scope type"})
+		return
+	}
+	// useruserId, ok := c.Get("user_id")
+
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "UserID not obtained from token"})
+		return
+	}
+
+	userCompanyID, _ := c.Get("company_id")
+	userPlantID, _ := c.Get("plant_id")
+
+	// if input.UserId != useruserId {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "UserID not obtained from token not match with request userId"})
+	// 	return
+	// }
+
+	// Step 1: Hierarchy-based role restrictions
+	switch scopeStr {
+	case "super_admin":
+		if input.Scope == "super_admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Super admin cannot assign another super_admin"})
+			return
+		}
+
+	case "company_admin":
+		if input.Scope != "plant_admin" && input.Scope != "machine_user" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Company admin can only assign plant_admin or machine_user"})
+			return
+		}
+		// ✅ Ownership check → can assign only within their company
+		if input.CompanyId != userCompanyID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Company admin can only assign roles within their company"})
+			return
+		}
+
+	case "plant_admin":
+		if input.Scope != "machine_user" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Plant admin can only assign machine_user"})
+			return
+		}
+		// ✅ Ownership check → can assign only within their plant
+		if input.PlantId != userPlantID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Plant admin can only assign roles within their plant"})
+			return
+		}
+
+	case "machine_user":
+		c.JSON(http.StatusForbidden, gin.H{"error": "Machine user cannot assign roles"})
+		return
+
+	default:
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unknown scope"})
+		return
+	}
+
+	// Step 2: Call service layer
+	resp, err := services.AssignUserRole(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
