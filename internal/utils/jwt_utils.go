@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"basics/internal/models"
+	userModels "basics/internal/models/user"
 	"errors"
 	"fmt"
 	"time"
@@ -11,12 +11,12 @@ import (
 
 var jwtSecret = []byte(Cfg.JWTSecret)
 
-func GenerateJWT(user *models.LoginResponse) (*models.LoginResponse, error) {
+func GenerateJWT(user *userModels.LoginResponse) (*userModels.LoginResponse, error) {
 	claims := jwt.MapClaims{
 		"email":      user.Email,
 		"company_id": user.CompanyId,
 		"plant_id":   user.PlantId,
-		"machine_id": user.PlantId,
+		"machine_id": user.MachineId,
 		"scope":      user.Scope,
 		"user_id":    user.UserId,
 		"exp":        time.Now().Add(24 * time.Hour).Unix(),
