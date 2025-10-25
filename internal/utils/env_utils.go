@@ -14,11 +14,14 @@ var Cfg models.EnvModels
 
 func LoadEnvConfig() {
 
-	err := godotenv.Load()
+	// err := godotenv.Load()
 
-	if err != nil {
-		log.Fatal("Failed During Loading of Env...")
-	}
+	// if err != nil {
+	// 	log.Fatal("Failed During Loading of Env...")
+	// }
+
+	//For hosting
+	_ = godotenv.Load()
 
 	Cfg = models.EnvModels{
 		DatabaseHostName:   os.Getenv("DB_HOST"),
