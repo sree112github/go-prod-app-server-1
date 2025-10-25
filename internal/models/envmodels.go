@@ -6,5 +6,6 @@ type EnvModels struct {
 	DatabaseUserName   string
 	DatabasePassword   string
 	DatabaseName       string
+	DBSSL              string
 	JWTSecret          string
 }

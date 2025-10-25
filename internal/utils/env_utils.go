@@ -26,6 +26,7 @@ func LoadEnvConfig() {
 		DatabaseUserName:   os.Getenv("DB_USER"),
 		DatabasePassword:   os.Getenv("DB_PASSWORD"),
 		DatabaseName:       os.Getenv("DB_NAME"),
+		DBSSL:              os.Getenv("DB_SSL"),
 		JWTSecret:          os.Getenv("JWT_SECRET"),
 	}
 	if Cfg.JWTSecret == "" {

@@ -29,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	// 	MaxAge:           12 * time.Hour,
 	// }))
 	api := r.Group("/api")
+	api.Use(middleware.RateLimitMiddleware())
 
 	// api.Use(middleware.CORSMiddleware())
 
@@ -42,7 +43,7 @@ func SetupRouter() *gin.Engine {
 
 	protectedRoutes := r.Group("/api")
 
-	protectedRoutes.Use(middleware.AuthMiddleware())
+	protectedRoutes.Use(middleware.RateLimitMiddleware(), middleware.AuthMiddleware())
 
 	{
 
@@ -57,11 +58,11 @@ func SetupRouter() *gin.Engine {
 
 		//plant endpoints
 		protectedRoutes.POST("/createplant", plantcontroller.CreatePlant)
-		protectedRoutes.GET("/getallplants",plantcontroller.GetAllPlantsBasedOnScope)//// ?page=2&limit=10
-		
+		protectedRoutes.GET("/getallplants", plantcontroller.GetAllPlantsBasedOnScope) //// ?page=2&limit=10
 
 		//Machine Endpoints
 		protectedRoutes.POST("/createmachine", machinecontroller.CreateMachine)
+		protectedRoutes.GET("/getallmachines", machinecontroller.GetAllMachinesBasedonScope)
 
 		//Device Endpoints
 		protectedRoutes.POST("/createdevice", devicecontrollers.CreateDevice)

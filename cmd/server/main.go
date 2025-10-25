@@ -15,6 +15,9 @@ func main() {
 
 	config.ConnectDB()
 
+	//“Okay, remember this — I’ll run it later.”
+	defer config.DB.Close()
+
 	r := routes.SetupRouter()
 
 	fmt.Println("server starts")

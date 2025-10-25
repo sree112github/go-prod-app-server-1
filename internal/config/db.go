@@ -18,8 +18,9 @@ func ConnectDB() {
 	dbUser := utils.Cfg.DatabaseUserName
 	dbPassword := utils.Cfg.DatabasePassword
 	dbName := utils.Cfg.DatabaseName
+	dbSsl := utils.Cfg.DBSSL
 
-	dns := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, dbPort, dbUser, dbPassword, dbName)
+	dns := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", host, dbPort, dbUser, dbPassword, dbName, dbSsl)
 
 	var err error
 
