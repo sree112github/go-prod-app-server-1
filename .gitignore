@@ -32,5 +32,4 @@ build/
 tmp/
 
 # Go module files (only if you intentionally don't want them in repo)
-go.mod
 go.sum
